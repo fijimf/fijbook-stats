@@ -1,7 +1,7 @@
 package com.fijimf.deepfij.stats.analysis
 
 import com.fijimf.deepfij.schedule.model.{Game, Result, Schedule, ScheduleRoot, Team}
-import com.fijimf.deepfij.stats.model.{TeamSnapshot, TeamStatistic}
+import com.fijimf.deepfij.stats.model.TeamStatistic
 
 
 
@@ -25,6 +25,8 @@ object MetricAccumulator {
    * @return A list of Team statistics suitable for storing in the database
    */
   def processSeason[S](schedule: Schedule, metric: Metric[S]): List[TeamStatistic] = {
+    //TODO Skip if
+
     val scoreboards: List[Scoreboard] = schedule.seasonDates.map(d => Scoreboard(d, schedule.scoreboard(d)))
     val statistics: List[RawSnapshot] = scoreboards.foldLeft((metric.zero, List.empty[RawSnapshot])) { case ((s, r), scoreboard) =>
       val (state, snapshot) = metric.calculate(s, scoreboard)
