@@ -3,22 +3,16 @@ package com.fijimf.deepfij.stats.analysis
 import java.time.LocalDate
 
 import com.fijimf.deepfij.schedule.model.Team
-import com.fijimf.deepfij.stats.model.{TeamSnapshot, TeamStatistic}
+import com.fijimf.deepfij.stats.model.{DailySnapshot, TeamStatistic}
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 
-case class RawSnapshot(date: LocalDate, data: Map[Long, Double], defaultValue: Double) {
+case class RawSnapshot(date: LocalDate, data: Map[Long, Double]) {
 
-  def set(id:Long, x:Double): RawSnapshot = copy(data=data+(id->x))
-  def increment(id:Long, x:Double=1.0): RawSnapshot = set(id, value(id)+x)
-  def decrement(id:Long, x:Double=1.0): RawSnapshot = set(id, value(id)-x)
-
-  def value(id: Long): Double = data.withDefaultValue(defaultValue)(id)
-
-  def apply(teams: List[Team], key: String, higherIsBetter: Boolean): (TeamSnapshot, List[TeamStatistic]) = {
-    val valueMap: Map[Long, Double] = teams.map(t => t.id -> value(t.id)).toMap
+  def apply(teams: List[Team], key: String, higherIsBetter: Boolean, defaultValue:Double): (DailySnapshot, List[TeamStatistic]) = {
+    val valueMap: Map[Long, Double] = teams.map(t => t.id -> data.getOrElse(t.id,defaultValue)).toMap
     val rankMap: Map[Long, Int] = RawSnapshot.createRankMap(valueMap.toList, higherIsBetter)
     val s = new DescriptiveStatistics(valueMap.values.toArray)
-    val snapshot: TeamSnapshot = TeamSnapshot(0L, key, 0L, date, teams.size, s.getMax, s.getPercentile(0.5), s.getMin, s.getMean, s.getStandardDeviation)
+    val snapshot: DailySnapshot = DailySnapshot(0L, 0L, date, teams.size, s.getMax, s.getPercentile(0.5), s.getMin, s.getMean, s.getStandardDeviation)
 
     val statistics: List[TeamStatistic] = for {
       t <- teams
@@ -34,8 +28,7 @@ case class RawSnapshot(date: LocalDate, data: Map[Long, Double], defaultValue: D
 object RawSnapshot {
   def empty(defaultValue: Double): RawSnapshot = RawSnapshot(
     LocalDate.of(1900, 1, 1),
-    Map.empty[Long, Double],
-    defaultValue
+    Map.empty[Long, Double]
   )
 
   def createRankMap(valueMap: List[(Long, Double)], higherIsBetter: Boolean): Map[Long, Int] = {

@@ -3,7 +3,7 @@ package com.fijimf.deepfij.stats
 
 import java.time.LocalDate
 
-import com.fijimf.deepfij.stats.model.{DailySnapshot, SeasonSnapshot}
+import com.fijimf.deepfij.stats.model.{DailySnapshot, SeasonSnapshot, TeamStatistic}
 
 class DoobieTypecheckSpec extends DbIntegrationSpec {
   val containerName = "doobie-typecheck-spec"
@@ -44,7 +44,7 @@ class DoobieTypecheckSpec extends DbIntegrationSpec {
         check(SeasonSnapshot.Dao.findBySeasonId(1L))
       }
       it("findBySeasonIdModel should typecheck") {
-        check(SeasonSnapshot.Dao.findBySeasonIdModel(1L,"won-lost"))
+        check(SeasonSnapshot.Dao.findBySeasonIdModel(1L, "won-lost"))
       }
       it("findBySeasonIdModelKey should typecheck") {
         check(SeasonSnapshot.Dao.findBySeasonIdModelKey(1L, "won-lost", "wins"))
@@ -54,6 +54,29 @@ class DoobieTypecheckSpec extends DbIntegrationSpec {
       }
       it("truncate should typecheck") {
         check(SeasonSnapshot.Dao.truncate())
+      }
+    }
+    describe("TeamStatistic.Dao") {
+      it("insert should typecheck") {
+        check(TeamStatistic.Dao.insert(TeamStatistic(0L, 9L, 123L, 23.0, 1)))
+      }
+      it("update should typecheck") {
+        check(TeamStatistic.Dao.update(TeamStatistic(18L, 9L, 123L, 23.0, 1)))
+      }
+      it("find should typecheck") {
+        check(TeamStatistic.Dao.find(1L))
+      }
+      it("findBySeasonId should typecheck") {
+        check(TeamStatistic.Dao.findByDailySnapshotId(1L))
+      }
+      it("findBySeasonIdModel should typecheck") {
+        check(TeamStatistic.Dao.findByDailySnapshotIdTeam(1L, 123L))
+      }
+      it("delete should typecheck") {
+        check(TeamStatistic.Dao.delete(1L))
+      }
+      it("truncate should typecheck") {
+        check(TeamStatistic.Dao.truncate())
       }
     }
   }

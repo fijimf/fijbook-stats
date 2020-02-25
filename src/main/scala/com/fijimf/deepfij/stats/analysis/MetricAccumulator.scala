@@ -32,6 +32,6 @@ object MetricAccumulator {
       val (state, snapshot) = metric.calculate(s, scoreboard)
       (state, snapshot :: r)
     }._2
-    statistics.flatMap(s => s(schedule.teams, metric.key, metric.higherIsBetter)._2) //<<== FIXME
+    statistics.flatMap(s => s(schedule.teams, metric.key, metric.higherIsBetter, metric.defaultValue)._2) //<<== FIXME
   }
 }
