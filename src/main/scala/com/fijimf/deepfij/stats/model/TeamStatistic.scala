@@ -1,7 +1,7 @@
 package com.fijimf.deepfij.stats.model
 
 import doobie.implicits._
-import doobie.util.update.{Update, Update0}
+import doobie.util.update.Update0
 
 case class TeamStatistic(id: Long, dailySnapshotId: Long, teamId: Long, value: Double, rank: Int) {
 
@@ -18,6 +18,9 @@ object TeamStatistic {
     def insert(snap: TeamStatistic): Update0 =
       (fr"""INSERT INTO team_statistic(daily_snapshot_id, team_id, value, rank)
             VALUES (${snap.dailySnapshotId},${snap.teamId}, ${snap.value},  ${snap.rank})
+            ON CONFLICT (daily_snapshot_id, team_id)
+               DO UPDATE SET value = EXCLUDED.value, rank = EXCLUDED.rank
+                 WHERE team_statistic.value <> EXCLUDED.value OR team_statistic.rank <> EXCLUDED.rank
             RETURNING """ ++ colFr).update
 
     def update(snap: TeamStatistic): Update0 =
@@ -26,6 +29,8 @@ object TeamStatistic {
             RETURNING """ ++ colFr).update
 
     def find(id: Long): doobie.Query0[TeamStatistic] = (baseQuery ++ fr" WHERE id = $id").query[TeamStatistic]
+
+    def findAll(): doobie.Query0[TeamStatistic] = baseQuery.query[TeamStatistic]
 
     def findByDailySnapshotId(dailySnapshotId: Long): doobie.Query0[TeamStatistic] = (baseQuery ++ fr" WHERE daily_snapshot_id = $dailySnapshotId").query[TeamStatistic]
 

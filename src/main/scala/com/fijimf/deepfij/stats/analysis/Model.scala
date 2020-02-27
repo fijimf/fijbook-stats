@@ -1,7 +1,6 @@
 package com.fijimf.deepfij.stats.analysis
 
 import com.fijimf.deepfij.schedule.model.Schedule
-import com.fijimf.deepfij.stats.service.ModelResults
 
 trait Model {
   val name:String

@@ -26,12 +26,12 @@ object MetricAccumulator {
    */
   def processSeason[S](schedule: Schedule, metric: Metric[S]): List[TeamStatistic] = {
     //TODO Skip if
-
-    val scoreboards: List[Scoreboard] = schedule.seasonDates.map(d => Scoreboard(d, schedule.scoreboard(d)))
-    val statistics: List[RawSnapshot] = scoreboards.foldLeft((metric.zero, List.empty[RawSnapshot])) { case ((s, r), scoreboard) =>
-      val (state, snapshot) = metric.calculate(s, scoreboard)
-      (state, snapshot :: r)
-    }._2
-    statistics.flatMap(s => s(schedule.teams, metric.key, metric.higherIsBetter, metric.defaultValue)._2) //<<== FIXME
+???
+//    val scoreboards: List[Scoreboard] = schedule.seasonDates.map(d => Scoreboard(d, schedule.scoreboard(d)))
+//    val statistics: List[RawSnapshot] = scoreboards.foldLeft((metric.zero, List.empty[RawSnapshot])) { case ((s, r), scoreboard) =>
+//      val (state, snapshot) = metric.calculate(s, scoreboard)
+//      (state, snapshot :: r)
+//    }._2
+//    statistics.flatMap(s => s(schedule.teams, metric.key, metric.higherIsBetter, metric.defaultValue)._2) //<<== FIXME
   }
 }

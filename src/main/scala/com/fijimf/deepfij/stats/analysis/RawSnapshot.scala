@@ -8,9 +8,9 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 
 case class RawSnapshot(date: LocalDate, data: Map[Long, Double]) {
 
-  def apply(teams: List[Team], key: String, higherIsBetter: Boolean, defaultValue:Double): (DailySnapshot, List[TeamStatistic]) = {
-    val valueMap: Map[Long, Double] = teams.map(t => t.id -> data.getOrElse(t.id,defaultValue)).toMap
-    val rankMap: Map[Long, Int] = RawSnapshot.createRankMap(valueMap.toList, higherIsBetter)
+  def toSnapshotAndStats(teams: List[Team], key:Key): (DailySnapshot, List[TeamStatistic]) = {
+    val valueMap: Map[Long, Double] = teams.map(t => t.id -> data.getOrElse(t.id,key.defaultValue)).toMap
+    val rankMap: Map[Long, Int] = RawSnapshot.createRankMap(valueMap.toList, key.higherIsBetter)
     val s = new DescriptiveStatistics(valueMap.values.toArray)
     val snapshot: DailySnapshot = DailySnapshot(0L, 0L, date, teams.size, s.getMax, s.getPercentile(0.5), s.getMin, s.getMean, s.getStandardDeviation)
 
