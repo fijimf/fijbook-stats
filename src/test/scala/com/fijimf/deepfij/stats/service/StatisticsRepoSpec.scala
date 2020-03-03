@@ -112,7 +112,7 @@ class StatisticsRepoSpec extends DbIntegrationSpec {
         assert(z.size === 8)
       }).unsafeRunSync()
     }
-    it("insert  DateResults is idempotent") {
+    it("insert of DateResults is idempotent") {
       val seasonSnapshot = SeasonSnapshot(1L, "scoring", "max-margin", 4L, DigestUtils.md5Hex("Jim ROolz"))
       val rs1 = RawSnapshot(
         LocalDate.of(2020, 2, 20),
@@ -126,12 +126,44 @@ class StatisticsRepoSpec extends DbIntegrationSpec {
         _ <- TeamStatistic.Dao.truncate().run.transact(transactor)
         _ <- DailySnapshot.Dao.truncate().run.transact(transactor)
         y1 <- repo.saveDateResults(seasonSnapshot, teams, List(rs1,rs2)).compile.to[List]
-        _ <- repo.saveDateResults(seasonSnapshot, teams, List(rs1,rs2)).compile.to[List]
+        y2 <- repo.saveDateResults(seasonSnapshot, teams, List(rs1,rs2)).compile.to[List]
         z <- TeamStatistic.Dao.findAll().to[List].transact(transactor)
         w <- DailySnapshot.Dao.findAll().to[List].transact(transactor)
       } yield {
         assert(y1.size === 8)
+        assert(y2.size === 0)
         assert(w.size === 2)
+        assert(z.size === 8)
+      }).unsafeRunSync()
+    }
+    it("insert of changed DateResults leave id of DailySnap the same") {
+      val seasonSnapshot = SeasonSnapshot(1L, "scoring", "max-margin", 4L, DigestUtils.md5Hex("Jim ROolz"))
+      val rs1 = RawSnapshot(
+        LocalDate.of(2020, 2, 20),
+        Map(1L -> 2.0, 2L -> 3.0, 3L -> 2.0, 4L -> -3.0)
+      )
+      val rs1a = RawSnapshot(
+        LocalDate.of(2020, 2, 20),
+        Map(1L -> 2.0, 2L -> 3.1, 3L -> 2.0, 4L -> -3.1)
+      )
+      val rs2 = RawSnapshot(
+        LocalDate.of(2020, 2, 19),
+        Map(1L -> 2.0, 2L -> 3.0, 3L -> 5.0, 4L -> -3.0)
+      )
+      (for {
+        _ <- TeamStatistic.Dao.truncate().run.transact(transactor)
+        _ <- DailySnapshot.Dao.truncate().run.transact(transactor)
+        y1 <- repo.saveDateResults(seasonSnapshot, teams, List(rs1,rs2)).compile.to[List]
+        w1 <- DailySnapshot.Dao.findAll().to[List].transact(transactor)
+        y2 <- repo.saveDateResults(seasonSnapshot, teams, List(rs1a, rs2)).compile.to[List]
+        w2 <- DailySnapshot.Dao.findAll().to[List].transact(transactor)
+        z <- TeamStatistic.Dao.findAll().to[List].transact(transactor)
+      } yield {
+        assert(y1.size === 8)
+        assert(y2.size === 2)
+        assert(w1.size === 2)
+        assert(w2.size === 2)
+        assert(w1.map(_.id).sorted === w2.map(_.id).sorted)
         assert(z.size === 8)
       }).unsafeRunSync()
     }

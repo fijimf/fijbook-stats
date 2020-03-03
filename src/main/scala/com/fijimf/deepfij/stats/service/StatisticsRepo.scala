@@ -2,7 +2,6 @@ package com.fijimf.deepfij.stats.service
 
 import cats.MonadError
 import cats.effect.Sync
-import cats.implicits._
 import com.fijimf.deepfij.schedule.model.Team
 import com.fijimf.deepfij.stats.analysis.{Key, ModelResults, RawSnapshot, SeasonResults}
 import com.fijimf.deepfij.stats.model.{DailySnapshot, SeasonSnapshot, TeamStatistic}
@@ -38,20 +37,18 @@ case class StatisticsRepo[F[_] : Sync](xa: Transactor[F]) {
   def saveDateResults(seasonSnapshot: SeasonSnapshot, teams: List[Team], data: List[RawSnapshot]): Stream[F, TeamStatistic] = {
     val key: Key = Models.findKey(seasonSnapshot.model, seasonSnapshot.key)
 
-    Stream.emits(data).flatMap(raw => {
-      val (dailySnap, listStats) = raw.toSnapshotAndStats(teams, key)
-      for {
-        ds <- DailySnapshot.Dao
-          .insert(dailySnap.copy(seasonSnapshotId = seasonSnapshot.id))
-          .withGeneratedKeys[DailySnapshot](DailySnapshot.Dao.cols: _*)
-          .transact(xa)
+    for {
+      raw <- Stream.emits(data)
+      (dailySnap, listStats) = raw.toSnapshotAndStats(teams, key)
+      ds <- DailySnapshot.Dao
+        .insert(dailySnap.copy(seasonSnapshotId = seasonSnapshot.id))
+        .withGeneratedKeys[DailySnapshot](DailySnapshot.Dao.cols: _*)
+        .transact(xa)
+      ts <- saveTeamResults(ds, listStats)
 
-        ts <- saveTeamResults(ds, listStats)
-      } yield {
-        ts
-      }
-
-    })
+    } yield {
+      ts
+    }
   }
 
   def saveTeamResults(ds: DailySnapshot, listStats: List[TeamStatistic]): Stream[F, TeamStatistic] = {

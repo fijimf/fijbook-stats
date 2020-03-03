@@ -1,0 +1,16 @@
+<configuration>
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <encoder>
+            <pattern>%d [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="STDERR" />
+    </root>
+    <logger name="slick.jdbc.JdbcBackend"   level="ERROR" />
+    <logger name="slick.util.AsyncExecutor" level="ERROR" />
+    <logger name="com.zaxxer.hikari"        level="ERROR" />
+    <logger name="com.fijimf"               level="INFO"/>
+
+</configuration>
