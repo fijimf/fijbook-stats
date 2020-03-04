@@ -42,7 +42,7 @@ object DailySnapshot {
             RETURNING """ ++ colFr).update
 
     def find(id: Long): doobie.Query0[DailySnapshot] = (baseQuery ++ fr" WHERE id = $id").query[DailySnapshot]
-    def findAll(): doobie.Query0[DailySnapshot] = (baseQuery).query[DailySnapshot]
+    def findAll(): doobie.Query0[DailySnapshot] = baseQuery.query[DailySnapshot]
 
     def findBySeasonSnap(seasonSnapshotId: Long): doobie.Query0[DailySnapshot] = (baseQuery ++ fr" WHERE season_snapshot_id = $seasonSnapshotId").query[DailySnapshot]
 

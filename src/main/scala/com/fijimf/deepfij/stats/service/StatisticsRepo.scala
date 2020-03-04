@@ -45,7 +45,6 @@ case class StatisticsRepo[F[_] : Sync](xa: Transactor[F]) {
         .withGeneratedKeys[DailySnapshot](DailySnapshot.Dao.cols: _*)
         .transact(xa)
       ts <- saveTeamResults(ds, listStats)
-
     } yield {
       ts
     }

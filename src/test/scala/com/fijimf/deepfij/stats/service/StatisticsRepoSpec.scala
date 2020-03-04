@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 import com.fijimf.deepfij.schedule.model.Team
 import com.fijimf.deepfij.stats.DbIntegrationSpec
-import com.fijimf.deepfij.stats.analysis.{Key, RawSnapshot}
+import com.fijimf.deepfij.stats.analysis.{Key, ModelResults, RawSnapshot, SeasonResults}
 import com.fijimf.deepfij.stats.model.{DailySnapshot, SeasonSnapshot, TeamStatistic}
 import doobie.implicits._
 import org.apache.commons.codec.digest.DigestUtils
@@ -166,6 +166,56 @@ class StatisticsRepoSpec extends DbIntegrationSpec {
         assert(w1.map(_.id).sorted === w2.map(_.id).sorted)
         assert(z.size === 8)
       }).unsafeRunSync()
+    }
+
+    it("insert new SeasonResults "){
+      val rs1 = RawSnapshot(
+        LocalDate.of(2020, 2, 20),
+        Map(1L -> 2.0, 2L -> 3.0, 3L -> 2.0, 4L -> -3.0)
+      )
+      val rs2 = RawSnapshot(
+        LocalDate.of(2020, 2, 19),
+        Map(1L -> 2.0, 2L -> 3.1, 3L -> 2.0, 4L -> -3.1)
+      )
+      val results = SeasonResults("max-margin", List(rs1,rs2))
+      for {
+        _ <- TeamStatistic.Dao.truncate().run.transact(transactor)
+        _ <- DailySnapshot.Dao.truncate().run.transact(transactor)
+        ts1 <- repo.saveSeasonResults(1L, "Jim Roolz", "scoring", teams, results).compile.toList
+        w2 <- DailySnapshot.Dao.findAll().to[List].transact(transactor)
+        z <- TeamStatistic.Dao.findAll().to[List].transact(transactor)
+      } yield {
+        assert(ts1.size === 8)
+        assert(w2.size===2)
+        assert(z.size===8)
+      }
+    }
+    it("inserts new ModelResults "){
+      val rs1 = RawSnapshot(
+        LocalDate.of(2020, 2, 20),
+        Map(1L -> 2.0, 2L -> 3.0, 3L -> 2.0, 4L -> -3.0)
+      )
+      val rs2 = RawSnapshot(
+        LocalDate.of(2020, 2, 19),
+        Map(1L -> 2.0, 2L -> 3.1, 3L -> 2.0, 4L -> -3.1)
+      )
+      val ra = SeasonResults("max-margin", List(rs1,rs2))
+      val rb = SeasonResults("min-margin", List(rs1,rs2))
+      val results = ModelResults("scoring",List(ra,rb))
+      for {
+        _ <- TeamStatistic.Dao.truncate().run.transact(transactor)
+        _ <- DailySnapshot.Dao.truncate().run.transact(transactor)
+        _ <- SeasonSnapshot.Dao.truncate().run.transact(transactor)
+        ts1 <- repo.saveModelResults(1L, "Jim Roolz", "scoring", teams, results).compile.toList
+        w2 <- SeasonSnapshot.Dao.findAll().to[List].transact(transactor)
+        x2 <- DailySnapshot.Dao.findAll().to[List].transact(transactor)
+        z <- TeamStatistic.Dao.findAll().to[List].transact(transactor)
+      } yield {
+        assert(ts1.size === 16)
+        assert(w2.size===2)
+        assert(x2.size===4)
+        assert(z.size===16)
+      }
     }
   }
 }

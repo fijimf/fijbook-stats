@@ -16,6 +16,9 @@ object SeasonSnapshot {
     def insert(snap: SeasonSnapshot): Update0 =
       (fr"""INSERT INTO season_snapshot(model, key, season_id, season_digest)
             VALUES (${snap.model},${snap.key}, ${snap.seasonId},  ${snap.seasonDigest})
+            ON CONFLICT (model, key, season_id)
+               DO UPDATE SET season_digest = EXCLUDED.season_digest
+                 WHERE season_snapshot.season_digest <> EXCLUDED.season_digest
             RETURNING """ ++ colFr).update
 
     def update(snap: SeasonSnapshot): Update0 =
@@ -24,6 +27,7 @@ object SeasonSnapshot {
             RETURNING """ ++ colFr).update
 
     def find(id: Long): doobie.Query0[SeasonSnapshot] = (baseQuery ++ fr" WHERE id = $id").query[SeasonSnapshot]
+    def findAll(): doobie.Query0[SeasonSnapshot] = baseQuery.query[SeasonSnapshot]
 
     def findBySeasonId(seasonId: Long): doobie.Query0[SeasonSnapshot] = (baseQuery ++ fr" WHERE season_id = $seasonId").query[SeasonSnapshot]
 
